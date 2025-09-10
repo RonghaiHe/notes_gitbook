@@ -1,0 +1,67 @@
+name: Build & Deploy GitBook
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 拉代码
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # 2. 安装 Node 10 并缓存 npm
+      - name: Use Node.js 10
+        uses: actions/setup-node@v3
+        with:
+          node-version: 10
+          cache: npm
+
+      # 3. 安装 gitbook-cli 并安装书籍依赖
+      - name: Install gitbook-cli
+        run: |
+          npm install -g gitbook-cli
+          gitbook install
+
+      # 4. 构建
+      - name: Build GitBook
+        run: gitbook build
+
+      # 5. 部署到 gh-pages
+      - name: Deploy to gh-pages
+        env:
+          TOKEN: ${{ secrets.TOKEN }}          # 在仓库 Secrets 里配置
+          REF:   github.com/RonghaiHe/notes_gitbook.git
+          BUILD: ${{ github.run_number }}
+        run: |
+          cd _book
+          git init
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add origin https://${REF}
+          git add .
+          git commit -m "Updated By GitHub Actions With Build $BUILD For Github Pages"
+          git push --force --quiet "https://${TOKEN}@${REF}" master:gh-pages
+
+      # 6. 邮件通知（成功 / 失败）
+      # - name: Send email notification
+      #   if: always()
+      #   uses: dawidd6/action-send-mail@v3
+      #   with:
+      #     server_address: smtp.qq.com
+      #     server_port: 465
+      #     secure: true
+      #     username: ${{ secrets.MAIL_USERNAME }}   # 可同通知邮箱
+      #     password: ${{ secrets.MAIL_PASSWORD }}   # QQ 邮箱用授权码
+      #     subject: |
+      #       ${{ job.status == 'success' && '✅' || '❌' }} GitBook 构建${{ job.status }}
+      #     body: |
+      #       仓库：${{ github.repository }}
+      #       分支：${{ github.ref }}
+      #       构建号：${{ github.run_number }}
+      #       状态：${{ job.status }}
+      #     to: hrhkjys@qq.com
+      #     from: GitHub Actions <noreply@github.com>
