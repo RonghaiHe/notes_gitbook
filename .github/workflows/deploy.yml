@@ -23,6 +23,7 @@ jobs:
       # 3. 安装 gitbook-cli 并安装书籍依赖
       - name: Install gitbook-cli
         run: |
+          npm install -g npm@6               # 升级到 6.x
           npm install -g gitbook-cli
           gitbook install
 
