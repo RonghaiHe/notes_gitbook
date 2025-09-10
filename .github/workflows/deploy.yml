@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 10
-          cache: npm
+          # cache: npm
 
       # 3. 安装 gitbook-cli 并安装书籍依赖
       - name: Install gitbook-cli
